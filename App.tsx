@@ -2,43 +2,43 @@ import React, { useState, useRef, useCallback } from 'react';
 import {
   HERO_SECTION_ID,
   COLLAGE_SECTION_ID,
-  MESSAGE_SECTION_ID,
+  REASONS_SECTION_ID, // Changed from MESSAGE_SECTION_ID
   EXPERIENCE_CHOOSER_SECTION_ID,
   QUIZ_SECTION_ID,
-  MOOD_BOARD_SECTION_ID,
   FINAL_SECTION_ID,
+  POST_PROPOSAL_COLLAGE_ID,
 } from './constants';
-import { GalentineStep, ImageUpload, CollageLayout, QuizResult, MoodBoardVibe } from './types';
+import { GalentineStep, ImageUpload, CollageLayout, QuizResult } from './types';
 
 // Import section components
 import HeroSection from './components/HeroSection';
 import CollageMaker from './components/CollageMaker';
-import MessageComposer from './components/MessageComposer';
+import ReasonsSection from './components/ReasonsSection'; // New component
 import ExperienceChooser from './components/ExperienceChooser';
 import QuizSection from './components/QuizSection';
-import MoodBoardSection from './components/MoodBoardSection';
 import FinalProposal from './components/FinalProposal';
 import Confetti from './components/Confetti';
 import FloatingHearts from './components/FloatingHearts';
+import PostProposalCollageDisplay from './components/PostProposalCollageDisplay';
 
 const App: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<GalentineStep>('hero');
   const [uploadedImages, setUploadedImages] = useState<ImageUpload[]>([]);
   const [collageLayout, setCollageLayout] = useState<CollageLayout>('grid');
-  const [personalMessage, setPersonalMessage] = useState<string>('');
+  const [reasons, setReasons] = useState<string[]>([]); // Changed from personalMessage
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
-  const [selectedMoodVibe, setSelectedMoodVibe] = useState<MoodBoardVibe | null>(null);
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
-  const [showFloatingHearts, setShowFloatingHearts] = useState<boolean>(true); // Optional enhancement
+  const [showFloatingHearts, setShowFloatingHearts] = useState<boolean>(true);
+  const [showPostProposalCollage, setShowPostProposalCollage] = useState<boolean>(false);
 
   const sectionRefs = {
     hero: useRef<HTMLDivElement>(null),
     collage: useRef<HTMLDivElement>(null),
-    message: useRef<HTMLDivElement>(null),
+    reasons: useRef<HTMLDivElement>(null), // Changed from message
     'experience-chooser': useRef<HTMLDivElement>(null),
     quiz: useRef<HTMLDivElement>(null),
-    'mood-board': useRef<HTMLDivElement>(null),
     final: useRef<HTMLDivElement>(null),
+    'post-proposal-collage': useRef<HTMLDivElement>(null),
   };
 
   const scrollToSection = useCallback((id: string) => {
@@ -53,30 +53,30 @@ const App: React.FC = () => {
       case 'collage':
         scrollToSection(COLLAGE_SECTION_ID);
         break;
-      case 'message':
+      case 'reasons': // Changed from 'message'
         setUploadedImages(data.images);
         setCollageLayout(data.layout);
-        scrollToSection(MESSAGE_SECTION_ID);
+        scrollToSection(REASONS_SECTION_ID); // Changed from MESSAGE_SECTION_ID
         break;
       case 'experience-choice':
-        setPersonalMessage(data.message);
+        setReasons(data.reasons); // Changed from setPersonalMessage
         scrollToSection(EXPERIENCE_CHOOSER_SECTION_ID);
+        handleNext('quiz'); // Automatically go to quiz as mood board is removed
         break;
       case 'quiz':
         scrollToSection(QUIZ_SECTION_ID);
-        break;
-      case 'mood-board':
-        scrollToSection(MOOD_BOARD_SECTION_ID);
         break;
       case 'final':
         if (data?.quizResult) {
           setQuizResult(data.quizResult);
         }
-        if (data?.moodVibe) {
-          setSelectedMoodVibe(data.moodVibe);
-        }
         scrollToSection(FINAL_SECTION_ID);
-        setShowConfetti(false); // Reset confetti before showing it again
+        setShowConfetti(false);
+        break;
+      case 'post-proposal-collage':
+        setCollageLayout('polaroid');
+        setShowPostProposalCollage(true);
+        scrollToSection(POST_PROPOSAL_COLLAGE_ID);
         break;
       default:
         break;
@@ -86,9 +86,13 @@ const App: React.FC = () => {
 
   const triggerConfetti = useCallback(() => {
     setShowConfetti(true);
-    // Hide confetti after some time
     setTimeout(() => setShowConfetti(false), 5000);
   }, []);
+
+  const handleAcceptProposal = useCallback(() => {
+    triggerConfetti();
+    handleNext('post-proposal-collage');
+  }, [triggerConfetti, handleNext]);
 
   return (
     <div className="relative min-h-screen">
@@ -99,42 +103,41 @@ const App: React.FC = () => {
         <HeroSection onNext={() => handleNext('collage')} />
       </section>
 
-      {(currentStep === 'collage' || currentStep === 'message' || currentStep === 'experience-choice' || currentStep === 'quiz' || currentStep === 'mood-board' || currentStep === 'final') && (
+      {(currentStep === 'collage' || currentStep === 'reasons' || currentStep === 'experience-choice' || currentStep === 'quiz' || currentStep === 'final' || currentStep === 'post-proposal-collage') && (
         <section id={COLLAGE_SECTION_ID} ref={sectionRefs.collage} className="min-h-screen flex items-center justify-center p-4 py-16">
-          <CollageMaker onNext={(images, layout) => handleNext('message', { images, layout })} />
+          <CollageMaker onNext={(images, layout) => handleNext('reasons', { images, layout })} /> {/* Changed target step */}
         </section>
       )}
 
-      {(currentStep === 'message' || currentStep === 'experience-choice' || currentStep === 'quiz' || currentStep === 'mood-board' || currentStep === 'final') && (
-        <section id={MESSAGE_SECTION_ID} ref={sectionRefs.message} className="min-h-screen flex items-center justify-center p-4 py-16">
-          <MessageComposer onNext={(message) => handleNext('experience-choice', { message })} />
+      {(currentStep === 'reasons' || currentStep === 'experience-choice' || currentStep === 'quiz' || currentStep === 'final' || currentStep === 'post-proposal-collage') && (
+        <section id={REASONS_SECTION_ID} ref={sectionRefs.reasons} className="min-h-screen flex items-center justify-center p-4 py-16">
+          <ReasonsSection onNext={(reasonsList) => handleNext('experience-choice', { reasons: reasonsList })} /> {/* New component */}
         </section>
       )}
 
-      {(currentStep === 'experience-choice' || currentStep === 'quiz' || currentStep === 'mood-board' || currentStep === 'final') && (
+      {(currentStep === 'experience-choice' || currentStep === 'quiz' || currentStep === 'final' || currentStep === 'post-proposal-collage') && (
         <section id={EXPERIENCE_CHOOSER_SECTION_ID} ref={sectionRefs['experience-chooser']} className="min-h-screen flex items-center justify-center p-4 py-16">
           <ExperienceChooser
-            onSelectQuiz={() => handleNext('quiz')}
-            onSelectMoodBoard={() => handleNext('mood-board')}
+            onNext={() => handleNext('quiz')}
           />
         </section>
       )}
 
-      {(currentStep === 'quiz' || (currentStep === 'final' && quizResult)) && (
+      {(currentStep === 'quiz' || (currentStep === 'final' && quizResult) || currentStep === 'post-proposal-collage') && (
         <section id={QUIZ_SECTION_ID} ref={sectionRefs.quiz} className="min-h-screen flex items-center justify-center p-4 py-16">
           <QuizSection onNext={(result) => handleNext('final', { quizResult: result })} />
         </section>
       )}
 
-      {(currentStep === 'mood-board' || (currentStep === 'final' && selectedMoodVibe)) && (
-        <section id={MOOD_BOARD_SECTION_ID} ref={sectionRefs['mood-board']} className="min-h-screen flex items-center justify-center p-4 py-16">
-          <MoodBoardSection onNext={(vibe) => handleNext('final', { moodVibe: vibe })} />
+      {(currentStep === 'final' || showPostProposalCollage) && (
+        <section id={FINAL_SECTION_ID} ref={sectionRefs.final} className="min-h-screen flex items-center justify-center p-4 py-16">
+          <FinalProposal onAcceptProposal={handleAcceptProposal} />
         </section>
       )}
 
-      {(currentStep === 'final' || showConfetti) && (
-        <section id={FINAL_SECTION_ID} ref={sectionRefs.final} className="min-h-screen flex items-center justify-center p-4 py-16">
-          <FinalProposal onPropose={triggerConfetti} />
+      {showPostProposalCollage && (
+        <section id={POST_PROPOSAL_COLLAGE_ID} ref={sectionRefs['post-proposal-collage']} className="min-h-screen flex items-center justify-center p-4 py-16">
+          <PostProposalCollageDisplay images={uploadedImages} />
         </section>
       )}
     </div>

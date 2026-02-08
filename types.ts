@@ -1,11 +1,11 @@
 export type GalentineStep =
   'hero' |
   'collage' |
-  'message' |
+  'reasons' | // Changed from 'message'
   'experience-choice' |
   'quiz' |
-  'mood-board' |
-  'final';
+  'final' |
+  'post-proposal-collage';
 
 export interface ImageUpload {
   id: string;
@@ -26,13 +26,4 @@ export interface QuizResult {
   title: string;
   description: string;
   image: string; // URL for illustration
-}
-
-export interface MoodBoardVibe {
-  id: string;
-  name: string;
-  colors: string[];
-  words: string[];
-  affirmations: string[];
-  images: string[]; // URLs for images
 }

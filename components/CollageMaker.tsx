@@ -11,11 +11,10 @@ interface CollageMakerProps {
 const CollageMaker: React.FC<CollageMakerProps> = ({ onNext }) => {
   const [uploadedImages, setUploadedImages] = useState<ImageUpload[]>([]);
   const [selectedLayout, setSelectedLayout] = useState<CollageLayout>('grid');
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
 
   const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      // Fix: Explicitly type `filesArray` and the `file` parameter in the map callback
-      // to ensure TypeScript correctly recognizes `File` objects for `ImageUpload` and `URL.createObjectURL`.
       const filesArray: File[] = Array.from(event.target.files);
       if (uploadedImages.length + filesArray.length > 6) {
         alert('You can upload a maximum of 6 photos.');
@@ -99,6 +98,190 @@ const CollageMaker: React.FC<CollageMakerProps> = ({ onNext }) => {
       </div>
     );
   }, [handleRemoveImage, handleCaptionChange, handleStickerClick]);
+
+  const downloadCollage = useCallback(async () => {
+    setIsDownloading(true);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      alert('Failed to get canvas context. Your browser might not support this feature.');
+      setIsDownloading(false);
+      return;
+    }
+
+    const CANVAS_WIDTH = 800;
+    let CANVAS_HEIGHT = 600; // Default height, adjust dynamically
+
+    // Load all images first
+    const loadedImages = await Promise.all(
+      uploadedImages.map((imgUpload) => {
+        return new Promise<HTMLImageElement | null>((resolve) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous'; // For external images, if any, otherwise not strictly needed for blob URLs
+          img.onload = () => resolve(img);
+          img.onerror = () => {
+            console.error(`Failed to load image: ${imgUpload.previewUrl}`);
+            resolve(null);
+          };
+          img.src = imgUpload.previewUrl;
+        });
+      })
+    );
+
+    const validLoadedImages = uploadedImages.map((imgUpload, index) => ({
+      ...imgUpload,
+      loadedImage: loadedImages[index],
+    })).filter(item => item.loadedImage !== null);
+
+    if (validLoadedImages.length === 0) {
+      alert('No valid images to download.');
+      setIsDownloading(false);
+      return;
+    }
+
+    // Dynamic height adjustment for stacked/polaroid
+    if (selectedLayout === 'stacked') {
+      CANVAS_HEIGHT = Math.max(CANVAS_HEIGHT, validLoadedImages.length * (CANVAS_WIDTH * 0.5 + 80) + 100);
+    } else if (selectedLayout === 'polaroid') {
+      CANVAS_HEIGHT = Math.max(CANVAS_HEIGHT, validLoadedImages.length * 40 + 350);
+    }
+
+    canvas.width = CANVAS_WIDTH;
+    canvas.height = CANVAS_HEIGHT;
+
+    // Draw cute background gradient
+    const gradient = ctx.createRadialGradient(
+      CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 0,
+      CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, Math.max(CANVAS_WIDTH, CANVAS_HEIGHT) / 2
+    );
+    gradient.addColorStop(0, '#FFF5F7'); // Lighter pink
+    gradient.addColorStop(1, '#F0E6FA'); // Lighter purple
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    // Draw cutesy background elements (hearts and sparkles)
+    const cutesyElements = ['💖', '✨'];
+    const cutesyColors = ['rgba(255,192,203,0.3)', 'rgba(240,230,250,0.3)', 'rgba(255,239,213,0.3)']; // Pastel colors with transparency
+
+    for (let i = 0; i < 40; i++) { // Draw 40 cutesy elements
+      const element = cutesyElements[Math.floor(Math.random() * cutesyElements.length)];
+      const color = cutesyColors[Math.floor(Math.random() * cutesyColors.length)];
+      const size = Math.random() * 15 + 15; // 15-30px
+      const x = Math.random() * CANVAS_WIDTH;
+      const y = Math.random() * CANVAS_HEIGHT;
+      const rotation = (Math.random() - 0.5) * 45 * Math.PI / 180; // +/- 45 degrees in radians
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      ctx.font = `${size}px Pacifico`; // Use Pacifico for cutesy elements
+      ctx.fillStyle = color;
+      ctx.fillText(element, 0, 0);
+      ctx.restore();
+    }
+
+    // Set main text styles (for captions)
+    ctx.font = '20px Quicksand';
+    ctx.fillStyle = '#4A5568'; // A dark gray for text
+    ctx.textAlign = 'center';
+
+    const IMAGE_MARGIN = 20;
+    const POLAROID_PADDING = 15;
+    const POLAROID_WIDTH = 250; // Fixed width for polaroids on canvas
+    const POLAROID_HEIGHT = 200; // Fixed height for image area in polaroid
+    const CAPTION_FONT_SIZE = 16;
+    // const STICKER_FONT_SIZE = 20; // Not directly used in canvas drawing, handled in caption
+
+    if (selectedLayout === 'grid') {
+      const imagesPerRow = validLoadedImages.length === 1 ? 1 : (validLoadedImages.length === 2 || validLoadedImages.length === 4 ? 2 : 3);
+      const cellWidth = (CANVAS_WIDTH - IMAGE_MARGIN * (imagesPerRow + 1)) / imagesPerRow;
+      const cellHeight = cellWidth * 0.75; // Maintain aspect ratio approximately
+
+      validLoadedImages.forEach((imgUpload, i) => {
+        if (!imgUpload.loadedImage) return;
+
+        const row = Math.floor(i / imagesPerRow);
+        const col = i % imagesPerRow;
+        const x = IMAGE_MARGIN + col * (cellWidth + IMAGE_MARGIN);
+        const y = IMAGE_MARGIN + row * (cellHeight + IMAGE_MARGIN);
+
+        ctx.drawImage(imgUpload.loadedImage, x, y, cellWidth, cellHeight);
+        
+        if (imgUpload.caption) {
+          ctx.font = `${CAPTION_FONT_SIZE}px Quicksand`;
+          ctx.fillStyle = '#4A5568';
+          ctx.fillText(imgUpload.caption, x + cellWidth / 2, y + cellHeight + CAPTION_FONT_SIZE + 5);
+        }
+      });
+    } else if (selectedLayout === 'stacked') {
+      validLoadedImages.forEach((imgUpload, i) => {
+        if (!imgUpload.loadedImage) return;
+
+        const imgWidth = CANVAS_WIDTH * 0.7; // 70% of canvas width
+        const imgHeight = imgWidth * (imgUpload.loadedImage.naturalHeight / imgUpload.loadedImage.naturalWidth);
+        const x = (CANVAS_WIDTH - imgWidth) / 2;
+        const y = IMAGE_MARGIN + i * (imgHeight * 0.8 + IMAGE_MARGIN); // Slightly overlap
+
+        ctx.drawImage(imgUpload.loadedImage, x, y, imgWidth, imgHeight);
+
+        if (imgUpload.caption) {
+          ctx.font = `${CAPTION_FONT_SIZE}px Quicksand`;
+          ctx.fillStyle = '#4A5568';
+          ctx.fillText(imgUpload.caption, x + imgWidth / 2, y + imgHeight + CAPTION_FONT_SIZE + 5);
+        }
+      });
+    } else if (selectedLayout === 'polaroid') {
+      validLoadedImages.forEach((imgUpload, i) => {
+        if (!imgUpload.loadedImage) return;
+
+        const totalPolaroidHeight = POLAROID_HEIGHT + POLAROID_PADDING * 2 + CAPTION_FONT_SIZE * 2; // Image + padding + caption
+        const x = IMAGE_MARGIN + (i % 2) * (POLAROID_WIDTH + IMAGE_MARGIN * 2); // Stagger left/right
+        const y = IMAGE_MARGIN + i * 40; // Overlap vertically
+
+        // Apply random rotation
+        const rotationAngle = (Math.random() - 0.5) * 15 * Math.PI / 180; // +/- 15 degrees in radians
+        
+        ctx.save();
+        ctx.translate(x + POLAROID_WIDTH / 2, y + totalPolaroidHeight / 2);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-(x + POLAROID_WIDTH / 2), -(y + totalPolaroidHeight / 2));
+
+        // Draw polaroid background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(x, y, POLAROID_WIDTH, totalPolaroidHeight);
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 3;
+        ctx.shadowOffsetY = 3;
+        ctx.fillRect(x, y, POLAROID_WIDTH, totalPolaroidHeight); // Draw again for shadow to apply
+        ctx.shadowColor = 'transparent'; // Reset shadow
+
+        // Draw image
+        ctx.drawImage(imgUpload.loadedImage, x + POLAROID_PADDING, y + POLAROID_PADDING, POLAROID_WIDTH - POLAROID_PADDING * 2, POLAROID_HEIGHT);
+
+        // Draw caption
+        if (imgUpload.caption) {
+          ctx.font = `${CAPTION_FONT_SIZE}px Quicksand`;
+          ctx.fillStyle = '#4A5568';
+          const captionY = y + POLAROID_PADDING + POLAROID_HEIGHT + CAPTION_FONT_SIZE + 5;
+          ctx.fillText(imgUpload.caption, x + POLAROID_WIDTH / 2, captionY, POLAROID_WIDTH - POLAROID_PADDING * 2);
+        }
+        ctx.restore(); // Restore context to original state (undo rotation/translation)
+      });
+    }
+
+    const dataURL = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = 'MyGalentineCollage.png';
+    link.href = dataURL;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setIsDownloading(false);
+  }, [uploadedImages, selectedLayout]);
+
 
   return (
     <div className="text-center p-8 bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl max-w-4xl mx-auto w-full animate-fade-in delay-300">
@@ -224,14 +407,22 @@ const CollageMaker: React.FC<CollageMakerProps> = ({ onNext }) => {
         </>
       )}
 
-      <Button
-        onClick={() => onNext(uploadedImages, selectedLayout)}
-        disabled={uploadedImages.length === 0}
-        className="mt-8"
-        icon="🎀"
-      >
-        Next: Write Her a Message
-      </Button>
+      <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+        <Button
+          onClick={downloadCollage}
+          disabled={uploadedImages.length === 0 || isDownloading}
+          icon="📸"
+        >
+          {isDownloading ? 'Generating...' : 'Download Collage'}
+        </Button>
+        <Button
+          onClick={() => onNext(uploadedImages, selectedLayout)}
+          disabled={uploadedImages.length === 0}
+          icon="🎀"
+        >
+          Next: Write Her a Message
+        </Button>
+      </div>
     </div>
   );
 };

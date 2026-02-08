@@ -1,12 +1,12 @@
-import { QuizQuestion, MoodBoardVibe, QuizResult } from './types';
+import { QuizQuestion, QuizResult } from './types';
 
 export const HERO_SECTION_ID = 'hero';
 export const COLLAGE_SECTION_ID = 'collage';
-export const MESSAGE_SECTION_ID = 'message';
+export const REASONS_SECTION_ID = 'reasons'; // New ID for reasons section
 export const EXPERIENCE_CHOOSER_SECTION_ID = 'experience-chooser';
 export const QUIZ_SECTION_ID = 'quiz';
-export const MOOD_BOARD_SECTION_ID = 'mood-board';
 export const FINAL_SECTION_ID = 'final';
+export const POST_PROPOSAL_COLLAGE_ID = 'post-proposal-collage'; // New ID for post-proposal collage display
 
 export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
@@ -68,54 +68,3 @@ export const QUIZ_RESULTS: { [key: string]: QuizResult } = {
     image: "https://picsum.photos/400/300?grayscale&random=4",
   },
 };
-
-export const MOOD_BOARD_VIBES: MoodBoardVibe[] = [
-  {
-    id: 'soft-pink',
-    name: 'Soft Pink',
-    colors: ['bg-pink-100', 'bg-rose-200', 'bg-purple-100'],
-    words: ['Gentle', 'Sweet', 'Dreamy', 'Affectionate'],
-    affirmations: ['We bloom together.', 'Our bond is beautiful.', 'Love always wins.'],
-    images: [
-      'https://picsum.photos/300/200?random=5',
-      'https://picsum.photos/300/200?random=6',
-      'https://picsum.photos/300/200?random=7',
-    ],
-  },
-  {
-    id: 'cozy-coffee',
-    name: 'Cozy Coffee',
-    colors: ['bg-amber-100', 'bg-stone-200', 'bg-red-100'],
-    words: ['Comfort', 'Warmth', 'Chat', 'Togetherness'],
-    affirmations: ['Our conversations nourish my soul.', 'You are my safe space.', 'Every moment with you is a gift.'],
-    images: [
-      'https://picsum.photos/300/200?random=8',
-      'https://picsum.photos/300/200?random=9',
-      'https://picsum.photos/300/200?random=10',
-    ],
-  },
-  {
-    id: 'main-character-energy',
-    name: 'Main Character Energy',
-    colors: ['bg-yellow-200', 'bg-indigo-100', 'bg-lime-100'],
-    words: ['Vibrant', 'Bold', 'Iconic', 'Adventure'],
-    affirmations: ['We make every day an epic story.', 'Our friendship is a masterpiece.', 'Shining bright, together.'],
-    images: [
-      'https://picsum.photos/300/200?random=11',
-      'https://picsum.photos/300/200?random=12',
-      'https://picsum.photos/300/200?random=13',
-    ],
-  },
-  {
-    id: 'romantic-friendship',
-    name: 'Romantic Friendship',
-    colors: ['bg-rose-200', 'bg-sky-100', 'bg-fuchsia-100'],
-    words: ['Devotion', 'Passion', 'Soulful', 'Eternal'],
-    affirmations: ['You are truly special to me.', 'Our connection is profound.', 'Forever intertwined.'],
-    images: [
-      'https://picsum.photos/300/200?random=14',
-      'https://picsum.photos/300/200?random=15',
-      'https://picsum.photos/300/200?random=16',
-    ],
-  },
-];

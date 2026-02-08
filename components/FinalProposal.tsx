@@ -2,10 +2,10 @@ import React from 'react';
 import Button from './Button';
 
 interface FinalProposalProps {
-  onPropose: () => void;
+  onAcceptProposal: () => void; // Renamed prop
 }
 
-const FinalProposal: React.FC<FinalProposalProps> = ({ onPropose }) => {
+const FinalProposal: React.FC<FinalProposalProps> = ({ onAcceptProposal }) => {
   return (
     <div className="text-center p-8 bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl max-w-2xl mx-auto w-full animate-fade-in delay-300">
       <h2 className="text-5xl md:text-7xl font-pacifico text-pink-600 mb-6 animate-scale-in">
@@ -16,10 +16,10 @@ const FinalProposal: React.FC<FinalProposalProps> = ({ onPropose }) => {
       </p>
 
       <div className="flex flex-col md:flex-row justify-center gap-6">
-        <Button onClick={onPropose} size="large" icon="💖" className="animate-wiggle-once">
+        <Button onClick={onAcceptProposal} size="large" icon="💖" className="animate-wiggle-once">
           YES, ALWAYS 💖
         </Button>
-        <Button onClick={onPropose} size="large" icon="🥹" className="animate-wiggle-once delay-200">
+        <Button onClick={onAcceptProposal} size="large" icon="🥹" className="animate-wiggle-once delay-200">
           Obviously 🥹
         </Button>
       </div>
