@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Be My Galentine 💕</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      scroll-behavior: smooth;
+    }
+    .font-pacifico {
+      font-family: 'Pacifico', cursive;
+    }
+
+    /* Custom animation for floating hearts */
+    @keyframes floatUp {
+      0% { transform: translateY(0) scale(1); opacity: 0.8; }
+      100% { transform: translateY(-100vh) scale(1.2); opacity: 0; }
+    }
+    .animate-float-heart {
+      animation: floatUp 10s ease-out infinite;
+    }
+
+    /* Custom animation for confetti fall */
+    @keyframes confetti-fall {
+      0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+    .animate-confetti {
+      animation: confetti-fall var(--duration) linear var(--delay) forwards;
+    }
+
+    /* Custom animation for fading in from top */
+    @keyframes fadeInDown {
+      0% { opacity: 0; transform: translateY(-20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-down {
+      animation: fadeInDown 0.8s ease-out forwards;
+    }
+
+    /* Custom animation for general fading in */
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.8s ease-out forwards;
+    }
+
+    /* Custom animation for a single bounce effect */
+    @keyframes bounceOnce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-15px); }
+      60% { transform: translateY(-7px); }
+    }
+    .animate-bounce-once {
+      animation: bounceOnce 1.5s ease-out 1;
+    }
+
+    /* Custom animation for scaling in */
+    @keyframes scaleIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-scale-in {
+      animation: scaleIn 0.6s ease-out forwards;
+    }
+
+    /* Custom animation for a single wiggle effect */
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-5deg); }
+      75% { transform: rotate(5deg); }
+    }
+    .animate-wiggle-once {
+      animation: wiggle 0.5s ease-in-out 1;
+    }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4"
+  }
+}
+</script>
+</head>
+<body class="bg-gradient-to-br from-pink-50 to-purple-50 min-h-screen text-gray-800">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
